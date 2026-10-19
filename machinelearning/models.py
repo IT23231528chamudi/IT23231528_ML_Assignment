@@ -36,16 +36,20 @@ class PerceptronModel(Module):
         Hint: You can use ones(dim) to create a tensor of dimension dim.
         """
         super(PerceptronModel, self).__init__()
-        self.w = Parameter(ones(1, dimensions))
+
+        # Initialize the weight parameter with ones
+        self.w = Parameter(ones(1, dimensions)) 
 
 
     def get_weights(self):
         """
         Return a Parameter instance with the current weights of the perceptron.
         """
-        return self.w
+        return self.w   # Return the current weight parameter
 
     def run(self, x):
+
+        # Calculate the perceptron score by multiplying weights with input features
         return torch.sum(self.w * x)
         """
         Calculates the score assigned by the perceptron to a data point x.
@@ -59,16 +63,16 @@ class PerceptronModel(Module):
          
         
     def get_prediction(self, x):
-        score = self.run(x)
+        score = self.run(x)  # Calculate the score for the given input
 
-        if score.item() >= 0:
+        # Predict positive class if the score is non negative
+        if score.item() >= 0: 
             return 1
         else:
             return -1
         
         """
         Calculates the predicted class for a single data point `x`.
-
         Returns: 1 or -1
         """
 
@@ -81,18 +85,22 @@ class PerceptronModel(Module):
 
         Each sample in the dataloader is in the form {'x': features, 'label': label} where label
         is the item we need to predict based off of its features.
-        """        
+        """   
+        # Disable automatic gradient calculation for perceptron updates     
         with no_grad():
-            dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
-        while True:
+            dataloader = DataLoader(dataset, batch_size=1, shuffle=True) # Create a data loader that processes one sample at a time
+        
+        # Continue training until the model makes no mistakes
+        while True: 
             mistakes = 0
-            for data in dataloader:
-                    x = data['x']
-                    y = data['label']
+            for data in dataloader:  
+                    x = data['x']   
+                    y = data['label']    
 
                     prediction = self.get_prediction(x)
 
                     if prediction != y.item():
+                        # Update the weights using the true label and input features
                         with torch.no_grad():
                              self.w.add_(y * x)
                         mistakes += 1
@@ -107,19 +115,27 @@ class RegressionModel(Module):
     to approximate sin(x) on the interval [-2pi, 2pi] to reasonable precision.
     """
     def __init__(self):
-        # Initialize your model parameters here
+        # Initialize the parent PyTorch module
         super().__init__()
+
+        # Initialize the first hidden layer with one input feature and 128 neurons
         self.layer1 = Linear(1, 128)
+
+        # Initialize the second hidden layer with 128 neurons
         self.layer2 = Linear(128, 128)
+
+        # Initialize the output layer to predict a single value
         self.output_layer = Linear(128, 1)
 
     def run(self, x):
-        x = relu(self.layer1(x))
-        x = relu(self.layer2(x))
-        return self.output_layer(x)
+        x = relu(self.layer1(x))   # Pass the input through the first hidden layer
+        x = relu(self.layer2(x))   # Pass the features through the second hidden layer
+        return self.output_layer(x)      # Calculate and return the predicted output
 
 
     def forward(self, x):
+
+        # Run the model to obtain predictions
         return self.run(x)
         """
         Runs the model for a batch of examples.
@@ -132,7 +148,11 @@ class RegressionModel(Module):
        
     
     def get_loss(self, x, y):
+
+        # Calculate the predicted values for the input batch
         prediction = self.run(x)
+
+        # Calculate the mean squared error between predictions and true values
         return mse_loss(prediction, y)
         """
         Computes the loss for a batch of examples.
@@ -146,22 +166,32 @@ class RegressionModel(Module):
        
 
     def train(self, dataset):
-        batch_size = 64
+        # Define the number of samples in each training batch
+        batch_size = 64   
+        
+        # Set the learning rate for the optimizer
         learning_rate = 0.01
+
+        # Set the number of training epochs
         epochs = 1000
 
+        # Create a data loader to load shuffled mini-batches
         dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
             shuffle=True
         )
 
+        # Initialize the Adam optimizer with the model parameters
         optimizer = optim.Adam(
             self.parameters(),
             lr=learning_rate
         )
 
+        # Iterate through the dataset for the specified number of epochs
         for epoch in range(epochs):
+
+            # Process each mini-batch in the dataset
             for batch in dataloader:
                 x = batch['x']
                 y = batch['label']
@@ -169,7 +199,7 @@ class RegressionModel(Module):
                 optimizer.zero_grad()
                 loss = self.get_loss(x, y)
                 loss.backward()
-                optimizer.step()
+                optimizer.step()  # Update the model parameters using the optimizer
 
         """
         Trains the model.
@@ -225,12 +255,17 @@ class DigitClassificationModel(Module):
             A node with shape (batch_size x 10) containing predicted scores
                 (also called logits)
         """
+        # Pass the input images through the first hidden layer
         x = relu(self.layer1(x))
+
+        # Pass the extracted features through the second hidden layer
         x = relu(self.layer2(x))
         return self.output_layer(x)
 
     
     def get_loss(self, x, y):
+
+        # Calculate the output scores for the input images
         logits = self.run(x)
         return cross_entropy(logits, y)
         """
@@ -258,11 +293,13 @@ class DigitClassificationModel(Module):
             shuffle=True
         )
 
+        # Initialize the Adam optimizer with the model parameters
         optimizer = optim.Adam(
             self.parameters(),
             lr=learning_rate
         )
 
+        # Iterate through the dataset for the specified number of epochs
         for epoch in range(epochs):
             for batch in dataloader:
                 x = batch['x']
@@ -301,11 +338,17 @@ class LanguageIDModel(Module):
          
 
     def run(self, xs):
+
+        # Get the number of words in the current batch
         batch_size = xs[0].shape[0]
 
+        # Initialize the hidden state with zeros for each word
         hidden = xs[0].new_zeros((batch_size, self.hidden_size))
 
+        # Process each character in the input word sequence
         for x in xs:
+
+            # Combine the current character representation with the previous hidden state
             hidden = relu(self.char_layer(x) + self.hidden_layer(hidden))
 
         return self.output_layer(hidden)
@@ -411,20 +454,26 @@ def Convolve(input: tensor, weight: tensor):
 
     output_rows = []
 
+    # Slide the filter vertically across the input image
     for i in range(output_height):
         output_row = []
 
+        # Slide the filter horizontally across the input image
         for j in range(output_width):
+            
+            # Extract the current region of the input image covered by the filter
             region = input[
                 i:i + weight_height,
-                j:j + weight_width
-            ]
+                j:j + weight_width]
 
             value = tensordot(region, weight, dims=2)
             output_row.append(value)
 
+        
+        # Stack the values to form the current output row
         output_rows.append(stack(output_row))
 
+    # Stack all output rows to create the final convolved output
     return stack(output_rows)
 
 
@@ -444,13 +493,15 @@ class DigitConvolutionalModel(Module):
     def __init__(self):
         # Initialize your model parameters here
         super().__init__()
-        output_size = 10
+        output_size = 10 # classes representing digits 0 through 9
 
         self.convolution_weights = Parameter(ones((3, 3)))
         self.layer1 = Linear(26 * 26, 64)
         self.output_layer = Linear(64, 10)
 
     def run(self, x):
+
+        # Pass the input through the forward method
         return self.forward(x)
  
     def forward(self, x):
@@ -466,6 +517,10 @@ class DigitConvolutionalModel(Module):
 
         
     def get_loss(self, x, y):
+
+        # Calculate the output scores for the input images
+        logits = self.run(x)
+        
         return cross_entropy(self.run(x), y)
         """
         Computes the loss for a batch of examples.
@@ -544,7 +599,26 @@ class Attention(Module):
         Take a look at the "dim" argument of torch.nn.functional.softmax to figure out how to do this.
         """
         B, T, C = input.size()
+        # Generate Query, Key, and Value matrices
+        K = self.k_layer(input)
+        Q = self.q_layer(input)
+        V = self.v_layer(input)
 
-        """YOUR CODE HERE"""
+        # Calculate scaled attention scores: K @ Q^T
+        scores = torch.matmul(K, torch.movedim(Q, 1, 2))
+        scores = scores / (self.layer_size ** 0.5)
+
+        # Apply causal masking
+        scores = scores.masked_fill(
+            self.mask[:, :, :T, :T] == 0,
+            float('-inf'))[0]
+
+        # Apply softmax along the last dimension
+        attention_weights = softmax(scores, dim=-1)
+
+        # Multiply attention weights by the Value matrix
+        output = torch.matmul(attention_weights, V)
+
+        return output
 
      
