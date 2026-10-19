@@ -108,12 +108,19 @@ class RegressionModel(Module):
     """
     def __init__(self):
         # Initialize your model parameters here
-        "*** YOUR CODE HERE ***"
         super().__init__()
+        self.layer1 = Linear(1, 128)
+        self.layer2 = Linear(128, 128)
+        self.output_layer = Linear(128, 1)
 
+    def run(self, x):
+        x = relu(self.layer1(x))
+        x = relu(self.layer2(x))
+        return self.output_layer(x)
 
 
     def forward(self, x):
+        return self.run(x)
         """
         Runs the model for a batch of examples.
 
@@ -122,10 +129,11 @@ class RegressionModel(Module):
         Returns:
             A node with shape (batch_size x 1) containing predicted y-values
         """
-        "*** YOUR CODE HERE ***"
-
+       
     
     def get_loss(self, x, y):
+        prediction = self.run(x)
+        return mse_loss(prediction, y)
         """
         Computes the loss for a batch of examples.
 
@@ -135,11 +143,34 @@ class RegressionModel(Module):
                 to be used for training
         Returns: a tensor of size 1 containing the loss
         """
-        "*** YOUR CODE HERE ***"
- 
-        
+       
 
     def train(self, dataset):
+        batch_size = 64
+        learning_rate = 0.01
+        epochs = 1000
+
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True
+        )
+
+        optimizer = optim.Adam(
+            self.parameters(),
+            lr=learning_rate
+        )
+
+        for epoch in range(epochs):
+            for batch in dataloader:
+                x = batch['x']
+                y = batch['label']
+
+                optimizer.zero_grad()
+                loss = self.get_loss(x, y)
+                loss.backward()
+                optimizer.step()
+
         """
         Trains the model.
 
@@ -153,7 +184,7 @@ class RegressionModel(Module):
             dataset: a PyTorch dataset object containing data to be trained on
             
         """
-        "*** YOUR CODE HERE ***"
+      
 
             
 
