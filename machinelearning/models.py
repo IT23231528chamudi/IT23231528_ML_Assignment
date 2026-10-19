@@ -245,9 +245,8 @@ class DigitClassificationModel(Module):
             y: a node with shape (batch_size x 10)
         Returns: a loss tensor
         """
+
         
-
-
     def train(self, dataset):
         batch_size = 64
         learning_rate = 0.001
@@ -277,8 +276,6 @@ class DigitClassificationModel(Module):
         Trains the model.
         """
        
-
-
 
 class LanguageIDModel(Module):
     """
@@ -379,15 +376,29 @@ def Convolve(input: tensor, weight: tensor):
 
     This returns a subtensor who's first element is tensor[y,x] and has height 'height, and width 'width'
     """
-    input_tensor_dimensions = input.shape
-    weight_dimensions = weight.shape
-    Output_Tensor = tensor(())
-    "*** YOUR CODE HERE ***"
+    input_height, input_width = input.shape
+    weight_height, weight_width = weight.shape
 
-    
-    "*** End Code ***"
-    return Output_Tensor
+    output_height = input_height - weight_height + 1
+    output_width = input_width - weight_width + 1
 
+    output_rows = []
+
+    for i in range(output_height):
+        output_row = []
+
+        for j in range(output_width):
+            region = input[
+                i:i + weight_height,
+                j:j + weight_width
+            ]
+
+            value = tensordot(region, weight, dims=2)
+            output_row.append(value)
+
+        output_rows.append(stack(output_row))
+
+    return stack(output_rows)
 
 
 class DigitConvolutionalModel(Module):
@@ -409,13 +420,11 @@ class DigitConvolutionalModel(Module):
         output_size = 10
 
         self.convolution_weights = Parameter(ones((3, 3)))
-        """ YOUR CODE HERE """
-
-
-
+        self.layer1 = Linear(26 * 26, 64)
+        self.output_layer = Linear(64, 10)
 
     def run(self, x):
-        return self(x)
+        return self.forward(x)
  
     def forward(self, x):
         """
@@ -425,10 +434,12 @@ class DigitConvolutionalModel(Module):
         x = x.reshape(len(x), 28, 28)
         x = stack(list(map(lambda sample: Convolve(sample, self.convolution_weights), x)))
         x = x.flatten(start_dim=1)
-        """ YOUR CODE HERE """
+        x = relu(self.layer1(x))
+        return self.output_layer(x)
 
-
+        
     def get_loss(self, x, y):
+        return cross_entropy(self.run(x), y)
         """
         Computes the loss for a batch of examples.
 
@@ -441,19 +452,37 @@ class DigitConvolutionalModel(Module):
             y: a node with shape (batch_size x 10)
         Returns: a loss tensor
         """
-        """ YOUR CODE HERE """
-
-     
         
-
     def train(self, dataset):
+        batch_size = 64
+        learning_rate = 0.001
+        epochs = 15
+
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True
+        )
+
+        optimizer = optim.Adam(
+            self.parameters(),
+            lr=learning_rate
+        )   
+
+        for epoch in range(epochs):
+            for batch in dataloader:
+                x = batch['x']
+                y = batch['label']
+
+                optimizer.zero_grad()
+                loss = self.get_loss(x, y)
+                loss.backward()
+                optimizer.step()
+        
         """
         Trains the model.
         """
-        """ YOUR CODE HERE """
-
-
-
+        
 class Attention(Module):
     def __init__(self, layer_size, block_size):
         super().__init__()
