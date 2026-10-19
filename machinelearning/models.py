@@ -36,9 +36,8 @@ class PerceptronModel(Module):
         Hint: You can use ones(dim) to create a tensor of dimension dim.
         """
         super(PerceptronModel, self).__init__()
-        
-        "*** YOUR CODE HERE ***"
-        
+        self.w = Parameter(ones(1, dimensions))
+
 
     def get_weights(self):
         """
@@ -47,6 +46,7 @@ class PerceptronModel(Module):
         return self.w
 
     def run(self, x):
+        return torch.sum(self.w * x)
         """
         Calculates the score assigned by the perceptron to a data point x.
 
@@ -56,19 +56,23 @@ class PerceptronModel(Module):
 
         The pytorch function `tensordot` may be helpful here.
         """
-        "*** YOUR CODE HERE ***"
+         
         
-
     def get_prediction(self, x):
+        score = self.run(x)
+
+        if score.item() >= 0:
+            return 1
+        else:
+            return -1
+        
         """
         Calculates the predicted class for a single data point `x`.
 
         Returns: 1 or -1
         """
-        "*** YOUR CODE HERE ***"
 
-
-
+         
     def train(self, dataset):
         """
         Train the perceptron until convergence.
@@ -80,9 +84,21 @@ class PerceptronModel(Module):
         """        
         with no_grad():
             dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
-            "*** YOUR CODE HERE ***"
+        while True:
+            mistakes = 0
+            for data in dataloader:
+                    x = data['x']
+                    y = data['label']
 
+                    prediction = self.get_prediction(x)
 
+                    if prediction != y.item():
+                        with torch.no_grad():
+                             self.w.add_(y * x)
+                        mistakes += 1
+
+            if mistakes == 0:
+                    break
 
 class RegressionModel(Module):
     """
