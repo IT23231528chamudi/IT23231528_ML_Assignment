@@ -293,10 +293,22 @@ class LanguageIDModel(Module):
         self.num_chars = 47
         self.languages = ["English", "Spanish", "Finnish", "Dutch", "Polish"]
         super(LanguageIDModel, self).__init__()
-        "*** YOUR CODE HERE ***"
+        self.hidden_size = 128
 
+        self.char_layer = Linear(self.num_chars, self.hidden_size)
+        self.hidden_layer = Linear(self.hidden_size, self.hidden_size)
+        self.output_layer = Linear(self.hidden_size, len(self.languages))
+         
 
     def run(self, xs):
+        batch_size = xs[0].shape[0]
+
+        hidden = xs[0].new_zeros((batch_size, self.hidden_size))
+
+        for x in xs:
+            hidden = relu(self.char_layer(x) + self.hidden_layer(hidden))
+
+        return self.output_layer(hidden)
         """
         Runs the model for a batch of examples.
 
@@ -325,10 +337,11 @@ class LanguageIDModel(Module):
             A node with shape (batch_size x 5) containing predicted scores
                 (also called logits)
         """
-        "*** YOUR CODE HERE ***"
-
+       
     
     def get_loss(self, xs, y):
+        logits = self.run(xs)
+        return cross_entropy(logits, y)
         """
         Computes the loss for a batch of examples.
 
@@ -342,10 +355,26 @@ class LanguageIDModel(Module):
             y: a node with shape (batch_size x 5)
         Returns: a loss node
         """
-        "*** YOUR CODE HERE ***"
-        
-
+         
     def train(self, dataset):
+        batch_size = 64
+        learning_rate = 0.001
+        epochs = 25
+
+        dataloader = DataLoader(dataset,batch_size=batch_size,shuffle=True)
+
+        optimizer = optim.Adam(self.parameters(),lr=learning_rate)
+
+        for epoch in range(epochs):
+            for batch in dataloader:
+                x = movedim(batch['x'], 1, 0)
+                y = batch['label']
+
+                optimizer.zero_grad()
+                loss = self.get_loss(x, y)
+                loss.backward()
+                optimizer.step()
+
         """
         Trains the model.
 
@@ -359,9 +388,7 @@ class LanguageIDModel(Module):
 
         For more information, look at the pytorch documentation of torch.movedim()
         """
-        "*** YOUR CODE HERE ***"
-
-        
+    
 
 def Convolve(input: tensor, weight: tensor):
     """
