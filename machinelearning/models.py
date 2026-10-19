@@ -186,14 +186,6 @@ class RegressionModel(Module):
         """
       
 
-            
-
-
-
-
-
-
-
 class DigitClassificationModel(Module):
     """
     A model for handwritten digit classification using the MNIST dataset.
@@ -213,10 +205,11 @@ class DigitClassificationModel(Module):
         super().__init__()
         input_size = 28 * 28
         output_size = 10
-        "*** YOUR CODE HERE ***"
 
-
-
+        self.layer1 = Linear(input_size, 256)
+        self.layer2 = Linear(256, 128)
+        self.output_layer = Linear(128, output_size)
+         
 
     def run(self, x):
         """
@@ -232,11 +225,14 @@ class DigitClassificationModel(Module):
             A node with shape (batch_size x 10) containing predicted scores
                 (also called logits)
         """
-        """ YOUR CODE HERE """
+        x = relu(self.layer1(x))
+        x = relu(self.layer2(x))
+        return self.output_layer(x)
 
- 
-
+    
     def get_loss(self, x, y):
+        logits = self.run(x)
+        return cross_entropy(logits, y)
         """
         Computes the loss for a batch of examples.
 
@@ -249,16 +245,38 @@ class DigitClassificationModel(Module):
             y: a node with shape (batch_size x 10)
         Returns: a loss tensor
         """
-        """ YOUR CODE HERE """
-
-    
         
 
+
     def train(self, dataset):
+        batch_size = 64
+        learning_rate = 0.001
+        epochs = 15
+
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True
+        )
+
+        optimizer = optim.Adam(
+            self.parameters(),
+            lr=learning_rate
+        )
+
+        for epoch in range(epochs):
+            for batch in dataloader:
+                x = batch['x']
+                y = batch['label']
+
+                optimizer.zero_grad()
+                loss = self.get_loss(x, y)
+                loss.backward()
+                optimizer.step()
         """
         Trains the model.
         """
-        """ YOUR CODE HERE """
+       
 
 
 
