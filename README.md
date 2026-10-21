@@ -26,4 +26,3 @@ cd machinelearning
 python autograder.py
 ```
 
-To run the character level GPT example, run `python chargpt.py` from the same directory.
