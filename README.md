@@ -4,12 +4,12 @@ This project contains PyTorch implementations for machine learning tasks, includ
 
 ## Project files
 
-- `machinelearning/models.py` — model implementations
-- `machinelearning/autograder.py` — assignment checks
-- `machinelearning/backend.py` — datasets and training utilities
-- `machinelearning/chargpt.py` and `gpt_model.py` — character level text generation example
-- `machinelearning/data/` — provided datasets
-- `machinelearning/input.txt` — text used by the example
+- `machinelearning/models.py` - model implementations
+- `machinelearning/autograder.py` - assignment checks
+- `machinelearning/backend.py` - datasets and training utilities
+- `machinelearning/chargpt.py` and `gpt_model.py` - character level text generation example
+- `machinelearning/data/` - provided datasets
+- `machinelearning/input.txt` - text used by the example
 
 ## Setup and run
 
